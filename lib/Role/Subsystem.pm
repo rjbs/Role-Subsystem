@@ -86,6 +86,40 @@ you did not start with a reference, a strong reference will be constructed to
 allow the subsystem to function efficiently afterward.  (This behavior can be
 disabled, if you never want to take a weak reference.)
 
+=head3 Swappable Subsystem Implementations
+
+You can also have multiple implementations of a single kind of subsystem.  For
+example, you may eventually want to do something like this:
+
+  package Account::ServiceManager::Legacy;
+  with 'Account::ServiceManager';
+
+  sub add_service { ... };
+
+...and...
+
+  package Account::ServiceManager::Simple;
+  with 'Account::ServiceManager';
+
+  sub add_service { ... };
+
+...and finally...
+
+  package Account;
+
+  sub settings_mgr {
+    my ($self) = @_;
+
+    my $mgr_class = $self->schema_version > 1
+                  ? 'Account::ServiceManager::Simple'
+                  : 'Account::ServiceManager::Legacy';
+
+    return $mgr_class->for_account($self);
+  }
+
+This requires a bit more work, but lets you replace subsystem implementations
+as fairly isolated units.
+
 =head1 PARAMETERS
 
 These parameters can be given when including Role::Subsystem; these are in
@@ -317,14 +351,14 @@ computed by calling the C<id_method> on C<what> as needed.
 
 =head2 for_$what
 
-  my $settings_mgr = Account::SettingsManager->for_account($account);
+  my $settings_mgr = Account::ServiceManager->for_account($account);
 
 This is a convenience constructor, returning a subsystem object for the given
 C<what>.
 
 =head2 for_$what_id
 
-  my $settings_mgr = Account::SettingsManager->for_account_id($account_id);
+  my $settings_mgr = Account::ServiceManager->for_account_id($account_id);
 
 This is a convenience constructor, returning a subsystem object for the given
 C<what_id>.
