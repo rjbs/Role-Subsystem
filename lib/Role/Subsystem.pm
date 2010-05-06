@@ -2,46 +2,89 @@ package Role::Subsystem;
 use MooseX::Role::Parameterized;
 # ABSTRACT: a parameterized role for object subsystems, helpers, and delegates
 
-=head1 SYNOPSIS
-
-You write this subsystem:
-
-  package Account::SettingsManager;
-  use Moose;
-  use Account;
-
-  with 'Role::Subsystem' => {
-    ident  => 'acct-settings-mgr',
-    type   => 'Account',
-    what   => 'account',
-    getter => sub { Account->retrieve_by_id( $_[0] ) },
-  };
-
-  sub do_stuff {
-    my ($self) = @_;
-
-    $self->account->xyzzy;
-  }
-
-...and then you can say:
-
-  my $settings_mgr = Account::SettingsManager->for_account($account);
-
-  printf "We got the settings manager for account %s\n",
-    $settings_mgr->account_id;
-
-  $settings_mgr->do_stuff;
-
 =head1 DESCRIPTION
 
 Role::Subsystem is a L<parameterized role|MooseX::Role::Parameterized>.  It's
 meant to simplify creating classes that encapsulate specific parts of the
-business logic related to parent classes.  As in the L<synopsis|/SYNOPSIS>
+business logic related to parent classes.  As in the L<synopsis|/What?>
 above, it can be used to write "helpers."  The subsystems it creates must have
 a reference to a parent object, which might be referenced by id or with an
 actual object reference.  Role::Subsystem tries to guarantee that no matter
 which kind of reference you have, the other kind can be obtained and stored for
 use.
+
+=head2 What??
+
+Okay, imagine you have a big class called Account.  An Account is the central
+point for a lot of behavior, and rather than dump all that logic in one place,
+you partition it into subsytems.  Let's say we want to write a subsystem that
+handles all of an Account's Services.  We might write this:
+
+  package Account::ServiceManager;
+  use Moose;
+  use Account;
+
+  with 'Role::Subsystem' => {
+    ident  => 'acct-service-mgr',
+    type   => 'Account',
+    what   => 'account',
+    getter => sub { Account->retrieve_by_id( $_[0] ) },
+  };
+
+  sub add_service {
+    my ($self, @args) = @_;
+
+    # ... do some preliminary business logic
+
+    $self->account->insert_related_rows(...);
+
+    # ... do some cleanup business logic
+  }
+
+Then you might add to F<Account.pm>:
+
+  package Account;
+  sub service_mgr {
+    my ($self) = @_;
+    return Account::ServiceManager->for_account($self);
+  }
+
+Then, to add a service you can write:
+
+  $account->service_mgr->add_service(...);
+
+You could also just grab the service manager object and use it as a handle for
+performing operations.
+
+If you don't have an Account object, just a reference to its id, you could get
+the service manager like this:
+
+  my $service_mgr = Account::ServiceManager->for_account_id( $account_id );
+
+=head2 Why?
+
+Here's an overview of everything this role will do for you, in terms of the
+Account::ServiceManager example above.
+
+It will create the C<for_account> and C<for_account_id> constructors on your
+subsystem.  (The C<for_account_id> constructor will only be created if a
+C<getter> is supplied.)
+
+It will defer retrieval of C<account> objects if you construct with only a
+C<account_id>, so that if you never need the full object, you never waste time
+getting it.
+
+It will ensure that any C<account> and C<account_id> encountered match the
+C<type> and C<id_type> types, respectively.  This will prevent a bogus
+identifier from being accepted, only to die later when it can't be used for
+lazy retrieval.
+
+If you create a subsystem object by passing in the parent object (the
+C<account>), it will take a weak reference to it to prevent cyclical references
+from interfering with garbage collection.  If the reference goes away, or if
+you did not start with a reference, a strong reference will be constructed to
+allow the subsystem to function efficiently afterward.  (This behavior can be
+disabled, if you never want to take a weak reference.)
 
 =head1 PARAMETERS
 
