@@ -91,6 +91,17 @@ disabled, if you never want to take a weak reference.)
 You can also have multiple implementations of a single kind of subsystem.  For
 example, you may eventually want to do something like this:
 
+  package Account::ServiceManager;
+  use Moose::Role;
+
+  with 'Role::Subsystem' => { ... };
+
+  requries 'add_service';
+  requries 'remove_service';
+  requries 'service_summary';
+
+...and then...
+
   package Account::ServiceManager::Legacy;
   with 'Account::ServiceManager';
 
