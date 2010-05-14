@@ -160,6 +160,21 @@ parameter what => (
   required => 1,
 );
 
+=head2 what_id
+
+This is the name of the attribute that will hold the parent object's
+identifier, like the C<account_id> in the synopsis above.
+
+If not given, it will be the value of C<what> with "_id" stuck on the end.
+
+=cut
+
+parameter what_id => (
+  isa      => 'Str',
+  lazy     => 1,
+  default  => sub { $_[0]->what . '_id' },
+);
+
 =head2 type
 
 This is the type that the C<what> must be.  It may be a stringly Moose type or
@@ -226,7 +241,7 @@ role {
 
   my $what      = $p->what;
   my $ident     = $p->ident;
-  my $what_id   = "$what\_id";
+  my $what_id   = $p->what_id;
   my $getter    = $p->getter;
   my $id_method = $p->id_method;
   my $weak_ref  = $p->weak_ref;
