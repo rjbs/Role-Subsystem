@@ -2,6 +2,9 @@ Revision history for {{$dist->name}}
 
 {{$NEXT}}
 
+0.101340  2010-05-14 21:46:51 America/New_York
+          the name of the "what_id" method is now a parameter
+
 0.101262  2010-05-06 15:00:22 America/New_York
           further expanded documentation
 
