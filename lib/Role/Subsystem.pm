@@ -7,7 +7,7 @@ use MooseX::Role::Parameterized;
 Role::Subsystem is a L<parameterized role|MooseX::Role::Parameterized>.  It's
 meant to simplify creating classes that encapsulate specific parts of the
 business logic related to parent classes.  As in the L<synopsis|/What?>
-above, it can be used to write "helpers."  The subsystems it creates must have
+below, it can be used to write "helpers."  The subsystems it creates must have
 a reference to a parent object, which might be referenced by id or with an
 actual object reference.  Role::Subsystem tries to guarantee that no matter
 which kind of reference you have, the other kind can be obtained and stored for
